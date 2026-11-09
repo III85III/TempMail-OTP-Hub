@@ -1,0 +1,26 @@
+# Binaries and executables
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+
+# Generated account data and credentials (CRITICAL - NEVER COMMIT)
+accounts_credentials.txt
+*.credentials.txt
+credentials.txt
+
+# Logs and runtime artifacts
+*.log
+logs/
+
+# Environment files
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
