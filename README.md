@@ -23,6 +23,16 @@
 
 ## 🚀 Quick Start
 
+### Windows app — no prerequisites
+
+Download [TempMail-OTP-Hub-Setup.exe](https://github.com/III85III/TempMail-OTP-Hub/releases/latest/download/TempMail-OTP-Hub-Setup.exe), run it, and launch **TempMail OTP Hub** from the Start menu. No Go or other runtime needs to be installed. The dashboard opens in your default browser; keep the console window open while using the app and close it to stop.
+
+For a portable copy, extract [the Windows ZIP](https://github.com/III85III/TempMail-OTP-Hub/releases/latest/download/TempMail-OTP-Hub-Windows-x64.zip) and run `tempmail-hub.exe`. Use Windows 10/11 64-bit. Internet access is required for email providers.
+
+Account data is stored in `%APPDATA%\TempMail-OTP-Hub\accounts_credentials.txt` on Windows, outside the installation folder. Existing users can use `-creds` to open an older credentials file. Updates and uninstall preserve saved account data.
+
+**Code → Download ZIP contains source code, not the ready-to-run app.** Use the Release downloads above.
+
 ### 1. Requirements
 - [Go 1.22+](https://golang.org/dl/) installed (for compiling from source)
 - Works on Windows, Linux, and macOS.
@@ -68,7 +78,9 @@ Usage of tempmail-hub:
   -port int
         Port to listen on (default 8585)
   -creds string
-        Path to accounts credentials file (default "accounts_credentials.txt")
+        Path to accounts credentials file (default: user config directory)
+  -no-browser
+        Do not open the browser automatically
 ```
 
 Example:
@@ -83,8 +95,8 @@ go run main.go -port 9090 -creds my_accounts.txt
 | Endpoint | Method | Description |
 | :--- | :--- | :--- |
 | `/api/accounts` | `GET` | List all cached local accounts (`email:password`). |
-| `/api/create-account` | `POST` | Generate one new disposable email address immediately. |
-| `/api/mailbox?email=...` | `GET` | Fetch live inbox messages for the specified email. |
+| `/api/new-email` | `POST` | Generate one new disposable email address immediately. |
+| `/api/messages?email=...` | `GET` | Fetch live inbox messages for the specified email. |
 | `/api/batch-status` | `GET` | Query running batch progress (done, target, successes, errors). |
 | `/api/start-batch?count=N` | `POST` | Trigger concurrent batch generation of `N` accounts. |
 | `/api/stop-batch` | `POST` | Cancel ongoing batch generation. |

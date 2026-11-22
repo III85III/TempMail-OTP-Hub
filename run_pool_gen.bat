@@ -17,6 +17,12 @@ echo [*] You can generate batch accounts, view successes, errors, and read OTP c
 echo [*] Press Ctrl+C in this window when you wish to close the server.
 echo.
 
-otp-receiver.exe -port 8585
+if exist "tempmail-hub.exe" (
+    tempmail-hub.exe %*
+) else (
+    echo Download TempMail-OTP-Hub-Setup.exe from:
+    echo https://github.com/III85III/TempMail-OTP-Hub/releases/latest
+    echo The source-code ZIP does not contain the application.
+)
 
 pause

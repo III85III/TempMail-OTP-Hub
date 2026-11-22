@@ -12,6 +12,7 @@ import (
 	"io"
 	"log"
 	"math/big"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -1030,12 +1031,25 @@ const uiTemplate = `<!DOCTYPE html>
 
 func main() {
 	port := flag.Int("port", 8585, "Port to listen on")
-	credFile := flag.String("creds", "accounts_credentials.txt", "Path to accounts credentials file")
+	credFile := flag.String("creds", "", "Credentials file (default: user config directory)")
+	noBrowser := flag.Bool("no-browser", false, "Do not open the browser automatically")
 	flag.Parse()
 
 	credFilePath = *credFile
+	if credFilePath == "" {
+		dir, err := os.UserConfigDir()
+		if err != nil {
+			log.Fatal(err)
+		}
+		credFilePath = filepath.Join(dir, "TempMail-OTP-Hub", "accounts_credentials.txt")
+	}
+	if err := os.MkdirAll(filepath.Dir(credFilePath), 0700); err != nil {
+		log.Fatal(err)
+	}
 	if _, err := os.Stat(credFilePath); os.IsNotExist(err) {
-		_ = os.WriteFile(credFilePath, []byte(""), 0600)
+		if err := os.WriteFile(credFilePath, []byte(""), 0600); err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	loadCredentials(credFilePath)
@@ -1129,7 +1143,7 @@ func main() {
 		batchState.Lock()
 		defer batchState.Unlock()
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(batchState)
+		_ = json.NewEncoder(w).Encode(&batchState)
 	})
 
 	http.HandleFunc("/api/messages", func(w http.ResponseWriter, r *http.Request) {
@@ -1175,15 +1189,22 @@ func main() {
 		})
 	})
 
-	serverURL := fmt.Sprintf("http://127.0.0.1:%d", *port)
+	listener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", *port))
+	if err != nil && *port == 8585 {
+		listener, err = net.Listen("tcp", "127.0.0.1:0")
+	}
+	if err != nil {
+		log.Fatalf("Cannot start dashboard: %v", err)
+	}
+	serverURL := "http://" + listener.Addr().String()
 	log.Printf("III85III OTP Receiver Hub started at: %s", serverURL)
+	log.Print("Keep this window open while using the dashboard. Close it to stop the app.")
 
-	go func() {
-		time.Sleep(600 * time.Millisecond)
-		openBrowser(serverURL)
-	}()
+	if !*noBrowser {
+		go openBrowser(serverURL)
+	}
 
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", *port), nil); err != nil {
+	if err := http.Serve(listener, nil); err != nil {
 		log.Fatalf("Server exited: %v", err)
 	}
 }
@@ -1193,6 +1214,8 @@ func openBrowser(url string) {
 	switch runtime.GOOS {
 	case "windows":
 		cmd = exec.Command("rundll32", "url.dll,FileProtocolHandler", url)
+	case "darwin":
+		cmd = exec.Command("open", url)
 	default:
 		cmd = exec.Command("xdg-open", url)
 	}
